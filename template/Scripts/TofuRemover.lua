@@ -1,23 +1,31 @@
-local tsv = require("AnyASCII")
-local map = {}
+local tsv = require("Data.SKSE.DynamicDialogueReplacer.Scripts.AnyASCII")  -- TSV string contents
 
-local ValidCharsString = "`1234567890-=~!@#$%^&*():_+QWERTYUIOP[]ASDFGHJKL;'\"ZXCVBNM,./qwertyuiop{}\\asdfghjklzxcvbnm<>?|¡¢£¤¥¦§¨©ª«®¯°²³´¶·¸¹º»¼½¾¿ÄÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþ ÿ "
+-- UTF-8 codepoint pattern (no utf8.* needed)
+local CHARPAT = "[%z\1-\127\194-\244][\128-\191]*"
 
+-- NOTE the double backslash before 'asdf...'
+local ValidCharsString =
+  "`1234567890-=~!@#$%^&*():_+QWERTYUIOP[]ASDFGHJKL;'\"ZXCVBNM,./qwertyuiop{}\\asdfghjklzxcvbnm<>?|" ..
+  "¡¢£¤¥¦§¨©ª«®¯°²³´¶·¸¹º»¼½¾¿ÄÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞß" ..
+  "àáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþ ÿ "
 
-for line in string.gmatch(tsv, "([^\n]+)") do
-  local row = {}
-  local i = 1
-  for field in string.gmatch(line, "([^\t]*)") do
-    row[i] = field
-    i = i + 1
-  end
+-- Build valid set
+local valid = {}
+for ch in ValidCharsString:gmatch(CHARPAT) do
+  valid[ch] = true
+end
 
-  -- skip if a valid character
-  if not string.find(ValidCharsString, row[1], 1, true) then
-    map[#map+1] = row
+-- Build replacement map from TSV; allow empty dst to delete chars; handle CRLF
+local repl = {}
+for src, dst in tsv:gmatch("([^\t\r\n]+)\t([^\r\n]*)") do
+  if src ~= "" and dst ~= nil and not valid[src] then
+    repl[src] = dst
   end
 end
 
+-- Replace per UTF-8 character
 function replace(text)
-  return text:gsub(".", map)
+  return (text:gsub(CHARPAT, function(ch)
+    return repl[ch] or ch
+  end))
 end
