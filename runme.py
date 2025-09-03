@@ -1,6 +1,7 @@
 from urllib.request import urlretrieve
 
 import argparse
+import csv
 
 parser = argparse.ArgumentParser(prog="runme.py")
 parser.add_argument("-v", "--verbose", action="store_true", default=False)
@@ -12,6 +13,7 @@ mode = args["mode"]
 verbose = args["verbose"]
 level = args["level"]
 
+tablename = "table.tsv"
 
 def vprint(string):
     if verbose:
@@ -25,11 +27,21 @@ def pull_anyascii_table(filename):
 
 def processDSD():
     vprint("Processing in DSD mode...")
+    print("WARNING: DSD MODE NOT SUPPORTED UNTIL FUTURE DSD UPDATE")
 
 def processDDR(ddr_level):
     vprint(f"Processing in DDR mode. Level: {ddr_level}")
+    
+    if ddr_level == "full" or ddr_level == "DDR":
+        vprint("Processing DDR...")
+        
+        
+        
+    if ddr_level == "full" or ddr_level == "DSD":
+        vprint ("Processing DSD...")
+        print ("WARNING: DSD NOT SUPPORTED UNTIL FUTURE DSD UPDATE")
 
-pull_anyascii_table("table.tsv")
+pull_anyascii_table(tablename)
 
 if mode == "DSD":
     processDSD()
